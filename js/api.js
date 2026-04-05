@@ -7,6 +7,8 @@
  *   http://localhost:5000 where Express runs (see backend/server.js).
  * - If you open the app at http://localhost:5000/... (Express serving the UI), same-origin "" is used.
  */
+window.__API_BASE__ = "https://saras-backend-fyof.onrender.com";
+
 (function (global) {
   /**
    * Resolve where /signup, /forgot-password, etc. live.
