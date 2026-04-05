@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign up - Saras Calculator App</title>
+  <link rel="stylesheet" href="css/app.css">
+  <style>body { min-height: 100vh; }</style>
+</head>
+<body>
+  <header class="app-header app-header--simple">
+    <span class="app-title">Saras Calculator App</span>
+  </header>
+
+  <div class="auth-shell">
+    <div class="auth-card">
+      <h1>Create account</h1>
+      <p class="auth-lead">Username (3+ chars), email (for password reset), password (6+ chars).</p>
+
+      <form id="signupForm">
+        <label for="username">Username</label>
+        <input type="text" id="username" name="username" autocomplete="username" required minlength="3">
+
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email" autocomplete="email" required>
+
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" autocomplete="new-password" required minlength="6">
+
+        <button type="submit" class="btn">Sign up</button>
+      </form>
+
+      <div id="msg" class="msg" role="status"></div>
+
+      <div class="auth-links">
+        <a href="login.html">Already have an account? Log in</a>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/auth-public.js"></script>
+  <script>
+    document.getElementById("signupForm").addEventListener("submit", async function (e) {
+      e.preventDefault();
+      var msg = document.getElementById("msg");
+      msg.textContent = "";
+      msg.className = "msg";
+
+      var username = document.getElementById("username").value.trim();
+      var email = document.getElementById("email").value.trim();
+      var password = document.getElementById("password").value;
+
+      try {
+        await SarasAPI.postSignup(username, email, password);
+        msg.className = "msg ok";
+        msg.textContent = "Account created! Redirecting…";
+        window.location.href = "index.html";
+      } catch (err) {
+        msg.className = "msg error";
+        msg.textContent = err.message || "Could not sign up.";
+      }
+    });
+  </script>
+</body>
+</html>

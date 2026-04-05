@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>About Us - Saras Calculator App</title>
+  <link rel="stylesheet" href="css/app.css">
+  <style>
+    .container {
+      padding: 20px;
+      max-width: 600px;
+      margin: auto;
+      text-align: center;
+    }
+    .profile-img {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 3px solid white;
+      margin-top: 20px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+    }
+    .name {
+      font-size: 1.5rem;
+      font-weight: bold;
+      margin: 15px 0 5px;
+    }
+    .subtitle {
+      font-size: 1rem;
+      opacity: 0.85;
+    }
+    .about-text {
+      margin-top: 20px;
+      background: rgba(255,255,255,0.1);
+      padding: 15px;
+      border-radius: 10px;
+      font-size: 1rem;
+      line-height: 1.5;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    }
+  </style>
+</head>
+<body>
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/auth-guard.js"></script>
+
+  <header class="app-header">
+    <span class="menu-btn" onclick="toggleDrawer()">☰</span>
+    <span class="app-title">Saras Calculator App</span>
+  </header>
+
+  <div class="overlay" id="overlay" onclick="closeDrawer()"></div>
+
+  <nav class="drawer" id="drawer" aria-label="Menu">
+    <p class="drawer-title">Menu</p>
+    <ul class="drawer-list">
+      <li><a href="index.html"><span class="drawer-icon">🏠</span><span>Home</span></a></li>
+      <li><a href="history.html"><span class="drawer-icon">⏳</span><span>History</span></a></li>
+      <li><a href="about.html"><span class="drawer-icon">ℹ</span><span>About</span></a></li>
+      <li><a href="#" id="navLogout"><span class="drawer-icon">🚪</span><span id="navLogoutLabel">Log out</span></a></li>
+    </ul>
+  </nav>
+
+  <div class="container">
+    
+    <img src="profile.jpg" alt="DP" class="profile-img">
+
+    <div class="name">Yash Kumar Saini</div>
+    <div class="subtitle">Student ID: 0148 | Web Developer</div>
+
+    <div class="about-text">
+      Hi! I'm a passionate web developer and a student currently pursuing my studies.
+      I love building modern, user-friendly web applications and learning about new
+      technologies every day. This Saras Calculator App is one of my projects to
+      make billing simple and fast.
+    </div>
+  </div>
+
+  <script src="js/drawer.js"></script>
+  <script>
+    function toggleDrawer() {
+      document.getElementById("drawer").classList.toggle("open");
+      document.getElementById("overlay").classList.toggle("show");
+    }
+    function closeDrawer() {
+      document.getElementById("drawer").classList.remove("open");
+      document.getElementById("overlay").classList.remove("show");
+    }
+    document.addEventListener("DOMContentLoaded", initProtectedDrawer);
+  </script>
+</body>
+</html>
+

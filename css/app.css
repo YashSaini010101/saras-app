@@ -1,0 +1,284 @@
+/**
+ * Shared layout — centered app title in the top bar (works with left menu button).
+ * Use .app-header + .app-title everywhere; use .app-header--simple when there is no menu.
+ */
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: linear-gradient(to bottom, #6a11cb, #2575fc);
+  color: white;
+  overflow-x: hidden;
+}
+
+/* Top bar: flex row; title is centered in the full width */
+.app-header {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  background: #6200ea;
+  padding: 10px 12px;
+  min-height: 48px;
+  font-size: clamp(0.95rem, 2.5vw, 1.2rem);
+  font-weight: bold;
+  z-index: 1000;
+  box-sizing: border-box;
+}
+
+/* Centered title — keeps left controls (e.g. ☰) usable */
+.app-title {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: min(72%, calc(100% - 100px));
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+  line-height: 1.2;
+}
+
+.app-header .menu-btn {
+  position: relative;
+  z-index: 2;
+  font-size: 1.5rem;
+  margin-right: 10px;
+  cursor: pointer;
+  background: none;
+  border: none;
+  color: inherit;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+/* Auth pages: no side control — title stays visually centered */
+.app-header--simple {
+  justify-content: center;
+}
+
+.app-header--simple .app-title {
+  position: static;
+  left: auto;
+  transform: none;
+  max-width: 100%;
+  pointer-events: auto;
+}
+
+@media (max-width: 380px) {
+  .app-title {
+    max-width: min(65%, calc(100% - 88px));
+    font-size: 0.95rem;
+  }
+}
+
+/* ---- Side drawer: flat list (no nested heading clutter) ---- */
+.overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 2500;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+.overlay.show {
+  display: block;
+  opacity: 1;
+}
+
+.drawer {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 260px;
+  max-width: 78vw;
+  height: 100%;
+  box-sizing: border-box;
+  background: linear-gradient(to bottom, #6a11cb, #2575fc);
+  color: white;
+  transform: translateX(-100%);
+  transition: transform 0.35s ease-in-out;
+  padding: 16px 12px 24px;
+  z-index: 3000;
+  box-shadow: 4px 0 10px rgba(0, 0, 0, 0.35);
+  overflow-y: auto;
+}
+.drawer.open {
+  transform: translateX(0);
+}
+
+.drawer-title {
+  margin: 0 0 12px 0;
+  padding: 8px 10px 10px;
+  font-size: 0.85rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  opacity: 0.85;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.drawer-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.drawer-list li {
+  margin: 0;
+  padding: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.drawer-list li:last-child {
+  border-bottom: none;
+}
+
+.drawer-list a {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 10px;
+  text-decoration: none;
+  color: white;
+  font-size: 1rem;
+  transition: background 0.2s ease;
+  border-radius: 8px;
+}
+
+.drawer-list a:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.drawer-icon {
+  flex-shrink: 0;
+  width: 1.5rem;
+  text-align: center;
+}
+
+/* ---- Auth pages (login, signup, forgot, reset) ---- */
+.auth-shell {
+  min-height: calc(100vh - 52px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px 40px;
+  box-sizing: border-box;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 420px;
+  padding: 24px 22px 28px;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  box-sizing: border-box;
+}
+
+.auth-card h1 {
+  font-size: 1.35rem;
+  margin: 0 0 8px 0;
+  text-align: center;
+}
+
+.auth-lead {
+  margin: 0 0 20px 0;
+  font-size: 0.95rem;
+  line-height: 1.45;
+  opacity: 0.92;
+  text-align: center;
+}
+
+.auth-card label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 0.92rem;
+}
+
+.auth-card input[type="text"],
+.auth-card input[type="email"],
+.auth-card input[type="password"] {
+  width: 100%;
+  padding: 12px 14px;
+  margin-bottom: 14px;
+  border-radius: 8px;
+  border: none;
+  box-sizing: border-box;
+  font-size: 1rem;
+}
+
+.auth-card input:focus {
+  outline: 2px solid #b388ff;
+}
+
+.auth-card .btn {
+  width: 100%;
+  background: #6200ea;
+  color: white;
+  border: none;
+  padding: 14px;
+  font-size: 1.05rem;
+  border-radius: 10px;
+  cursor: pointer;
+  margin-top: 6px;
+}
+
+.auth-card .btn:hover {
+  background: #4b00c7;
+}
+
+.auth-links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px 14px;
+  margin-top: 18px;
+  font-size: 0.95rem;
+  text-align: center;
+}
+
+.auth-links a {
+  color: #e1bee7;
+  white-space: nowrap;
+}
+
+.auth-sep {
+  opacity: 0.5;
+  user-select: none;
+}
+
+.auth-footer {
+  margin-top: 22px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+  text-align: center;
+  font-size: 0.92rem;
+}
+
+.auth-footer a {
+  color: #e1bee7;
+}
+
+.msg {
+  margin-top: 14px;
+  font-size: 0.9rem;
+  min-height: 1.2em;
+  text-align: center;
+}
+.msg.error {
+  color: #ffccbc;
+}
+.msg.ok {
+  color: #c8e6c9;
+}

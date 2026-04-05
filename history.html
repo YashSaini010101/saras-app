@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>History - Saras Calculator App</title>
+  <link rel="stylesheet" href="css/app.css">
+  <style>
+    .container { padding: 10px; max-width: 600px; margin: auto; }
+    .history-card {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      padding: 10px;
+      margin-bottom: 10px;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+    .history-card:hover { background: rgba(255, 255, 255, 0.2); }
+    .history-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.9rem;
+      opacity: 0.9;
+      margin-bottom: 5px;
+    }
+    .history-total { text-align: right; font-weight: bold; margin-top: 5px; }
+    .history-extra { font-size: 0.85rem; opacity: 0.8; }
+  </style>
+</head>
+<body>
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/auth-guard.js"></script>
+
+  <header class="app-header">
+    <span class="menu-btn" onclick="toggleDrawer()">☰</span>
+    <span class="app-title">Saras Calculator App</span>
+  </header>
+
+  <div class="overlay" id="overlay" onclick="closeDrawer()"></div>
+
+  <nav class="drawer" id="drawer" aria-label="Menu">
+    <p class="drawer-title">Menu</p>
+    <ul class="drawer-list">
+      <li><a href="index.html"><span class="drawer-icon">🏠</span><span>Home</span></a></li>
+      <li><a href="history.html"><span class="drawer-icon">⏳</span><span>History</span></a></li>
+      <li><a href="about.html"><span class="drawer-icon">ℹ</span><span>About</span></a></li>
+      <li><a href="#" id="navLogout"><span class="drawer-icon">🚪</span><span id="navLogoutLabel">Log out</span></a></li>
+    </ul>
+  </nav>
+
+  <div class="container" id="historyContainer"></div>
+
+  <script src="js/drawer.js"></script>
+  <script>
+    function toggleDrawer(){
+      document.getElementById("drawer").classList.toggle("open");
+      document.getElementById("overlay").classList.toggle("show");
+    }
+    function closeDrawer(){
+      document.getElementById("drawer").classList.remove("open");
+      document.getElementById("overlay").classList.remove("show");
+    }
+
+    /** Load bills from MongoDB for the logged-in user (GET /bills/:userId). */
+    async function loadHistory() {
+      const container = document.getElementById('historyContainer');
+      container.innerHTML = "<p>Loading…</p>";
+
+      try {
+        const uid = SarasAPI.getUserId();
+        const res = await SarasAPI.getBills(uid);
+        const history = res.bills || [];
+        container.innerHTML = "";
+
+        if (history.length === 0) {
+          container.innerHTML = "<p>No history yet.</p>";
+          return;
+        }
+
+        history.forEach((bill) => {
+          const d = new Date(bill.date);
+          const dateStr = d.toLocaleDateString();
+          const timeStr = d.toLocaleTimeString();
+          const total = bill.total;
+          const totalStr = (typeof total === "number" && total.toFixed) ? total.toFixed(2) : total;
+
+          const card = document.createElement('div');
+          card.classList.add('history-card');
+          card.innerHTML = `
+            <div class="history-header">
+              <span>${dateStr}</span>
+              <span>${timeStr}</span>
+            </div>
+            <div>Rate: ${bill.rate ?? "-"} | Format: ${bill.format ?? "-"}</div>
+            <div class="history-total">Total: ₹ ${totalStr}</div>
+            ${bill.paid !== undefined && bill.paid !== null ? `<div class="history-extra">Paid: ₹ ${Number(bill.paid).toFixed(2)} | Due: ₹ ${Number(bill.due || 0).toFixed(2)}</div>` : ""}
+          `;
+          card.onclick = () => openBillHistory(bill, dateStr, timeStr);
+          container.appendChild(card);
+        });
+      } catch (err) {
+        container.innerHTML = "<p class=\"history-extra\">" + (err.message || "Could not load history.") + "</p>";
+      }
+    }
+
+    /** Open bill preview: stash line items and bill id for bill.html */
+    function openBillHistory(bill, dateStr, timeStr) {
+      sessionStorage.setItem('sarasBill', JSON.stringify(bill.items || []));
+      sessionStorage.setItem('currentBillId', bill._id);
+      sessionStorage.setItem('billViewDate', dateStr);
+      sessionStorage.setItem('billViewTime', timeStr);
+      window.location.href = 'bill.html';
+    }
+
+    window.onload = function () {
+      initProtectedDrawer();
+      loadHistory();
+    };
+  </script>
+</body>
+</html>
+
+

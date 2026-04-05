@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Log in - Saras Calculator App</title>
+  <link rel="stylesheet" href="css/app.css">
+  <style>body { min-height: 100vh; }</style>
+</head>
+<body>
+  <header class="app-header app-header--simple">
+    <span class="app-title">Saras Calculator App</span>
+  </header>
+
+  <div class="auth-shell">
+    <div class="auth-card">
+      <h1>Log in</h1>
+      <p class="auth-lead">Sign in with your username and password.</p>
+
+      <form id="loginForm">
+        <label for="username">Username</label>
+        <input type="text" id="username" name="username" autocomplete="username" required>
+
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" autocomplete="current-password" required>
+
+        <button type="submit" class="btn">Log in</button>
+      </form>
+
+      <div id="msg" class="msg" role="status"></div>
+
+      <div class="auth-links">
+        <a href="signup.html">Create account</a>
+        <span class="auth-sep">·</span>
+        <a href="forgot-password.html">Forgot password?</a>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/auth-public.js"></script>
+  <script>
+    document.getElementById("loginForm").addEventListener("submit", async function (e) {
+      e.preventDefault();
+      var msg = document.getElementById("msg");
+      msg.textContent = "";
+      msg.className = "msg";
+
+      var username = document.getElementById("username").value.trim();
+      var password = document.getElementById("password").value;
+
+      try {
+        await SarasAPI.postLogin(username, password);
+        msg.className = "msg ok";
+        msg.textContent = "Success! Redirecting…";
+        window.location.href = "index.html";
+      } catch (err) {
+        msg.className = "msg error";
+        msg.textContent = err.message || "Login failed.";
+      }
+    });
+  </script>
+</body>
+</html>

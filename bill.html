@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Saras Calculator App - Bill</title>
+  <link rel="stylesheet" href="css/app.css">
+  <style>
+    .container { padding: 10px; max-width: 600px; margin: auto; }
+    table { width: 100%; border-collapse: collapse; background: rgba(255,255,255,0.08); border-radius: 10px; overflow: hidden; margin-top: 10px; }
+    th, td { padding: 10px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1); }
+    th { background: rgba(255,255,255,0.15); font-weight: bold; }
+    td img { width: 40px; height: 40px; object-fit: contain; display: block; margin: 0 auto 5px; }
+    .highlight { background: rgba(0,0,0,0.2); font-weight: bold; }
+    .due-row { background: rgba(255,0,0,0.2); font-weight: bold; }
+    input[type="number"] {
+      width: 90%; padding: 6px;
+      border-radius: 6px; border: none;
+      text-align: center;
+    }
+    button.pay {
+      background: #6200ea;
+      color: white;
+      padding: 6px 10px;
+      border-radius: 6px;
+      border: none;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    button.pay:disabled { background: rgba(98,0,234,0.5); cursor: not-allowed; }
+  </style>
+</head>
+<body>
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/auth-guard.js"></script>
+
+  <header class="app-header">
+    <button type="button" class="menu-btn" onclick="toggleDrawer()">☰</button>
+    <span class="app-title">Saras Calculator App</span>
+  </header>
+
+  <div class="overlay" id="overlay" onclick="closeDrawer()"></div>
+  <nav class="drawer" id="drawer" aria-label="Menu">
+    <p class="drawer-title">Menu</p>
+    <ul class="drawer-list">
+      <li><a href="index.html"><span class="drawer-icon">🏠</span><span>Home</span></a></li>
+      <li><a href="history.html"><span class="drawer-icon">⏳</span><span>History</span></a></li>
+      <li><a href="about.html"><span class="drawer-icon">ℹ</span><span>About</span></a></li>
+      <li><a href="#" id="navLogout"><span class="drawer-icon">🚪</span><span id="navLogoutLabel">Log out</span></a></li>
+    </ul>
+  </nav>
+
+  <div class="container">
+    <div style="display:flex;justify-content:space-between;margin-bottom:10px;">
+      <div id="billDate"></div>
+      <div id="billTime"></div>
+    </div>
+
+    <table>
+      <thead><tr><th>Product</th><th>Quantity</th><th>Amount (₹)</th></tr></thead>
+      <tbody id="billBody"></tbody>
+    </table>
+  </div>
+
+  <script src="js/drawer.js"></script>
+  <script>
+    function toggleDrawer(){document.getElementById("drawer").classList.toggle("open");document.getElementById("overlay").classList.toggle("show");}
+    function closeDrawer(){document.getElementById("drawer").classList.remove("open");document.getElementById("overlay").classList.remove("show");}
+
+    function toNumber(v){if(v==null)return 0;if(typeof v==="number")return v;const s=String(v).replace(/[^\d.-]+/g,'');const n=parseFloat(s);return Number.isFinite(n)?n:0;}
+    function escapeHtml(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+    function formatNumber(n){return Number(n||0).toFixed(2);}
+
+    function normalizeItems(raw){
+      if(!Array.isArray(raw))return[];
+      return raw.map(it=>{
+        const name=it.name||it.product||''; const image=it.image||''; 
+        const qtyRaw=it.qty??it.quantity??it.qtyDisplay??''; 
+        const amount=toNumber(it.price??it.amount??0);
+        return {name, image, qtyDisplay:qtyRaw, amount};
+      });
+    }
+
+    function renderBill(){
+      // Line items come from sessionStorage after "Generate bill" or from history (not localStorage)
+      var rawStr = sessionStorage.getItem('sarasBill');
+      var raw = [];
+      try {
+        raw = rawStr ? JSON.parse(rawStr) : [];
+      } catch (e) { raw = []; }
+      const items = normalizeItems(raw);
+
+      const tbody = document.getElementById('billBody');
+      tbody.innerHTML = '';
+      
+      let oldDuesItem=null; const nonDues=[];
+      items.forEach(it=> it.name.toLowerCase().includes('due') ? oldDuesItem=it : nonDues.push(it));
+
+      nonDues.forEach(it=>{
+        const tr=document.createElement('tr');
+        tr.innerHTML=`<td><img src="${escapeHtml(it.image)}"><div>${escapeHtml(it.name)}</div></td><td>${escapeHtml(it.qtyDisplay)}</td><td>${formatNumber(it.amount)}</td>`;
+        tbody.appendChild(tr);
+      });
+
+      if(oldDuesItem){
+        const tr=document.createElement('tr');
+        tr.innerHTML=`<td><img src="${escapeHtml(oldDuesItem.image)}"><div>${escapeHtml(oldDuesItem.name)}</div></td><td>${escapeHtml(oldDuesItem.qtyDisplay)}</td><td>${formatNumber(oldDuesItem.amount)}</td>`;
+        tbody.appendChild(tr);
+      }
+
+      const total = items.reduce((sum,i)=>sum+toNumber(i.amount),0);
+      window.__originalGrandTotal=total;
+
+      const totalRow=document.createElement('tr');
+      totalRow.className='highlight';
+      totalRow.innerHTML=`<td colspan="2">Grand Total</td><td id="grandTotalCell">${formatNumber(total)}</td>`;
+      tbody.appendChild(totalRow);
+
+      const payRow=document.createElement('tr');
+      payRow.innerHTML=`<td colspan="2"><input type="number" id="paidInput" placeholder="Enter Paid Amount (₹)"></td><td><button class="pay" id="payBtn">Pay</button></td>`;
+      tbody.appendChild(payRow);
+
+      const dueRow=document.createElement('tr');
+      dueRow.id='dueRow';
+      dueRow.className='due-row';
+      dueRow.style.display='none';
+      dueRow.innerHTML=`<td colspan="2">Due Amount</td><td id="dueCell">0.00</td>`;
+      tbody.appendChild(dueRow);
+
+      document.getElementById('billDate').textContent = sessionStorage.getItem('billViewDate') || new Date().toLocaleDateString();
+      document.getElementById('billTime').textContent = sessionStorage.getItem('billViewTime') || new Date().toLocaleTimeString();
+
+      document.getElementById('payBtn').addEventListener('click',onPayClick);
+    }
+
+    /** Record paid/due on the server (PATCH /bills/:billId) when we have a saved bill id. */
+    async function onPayClick(){
+      const paid=toNumber(document.getElementById('paidInput').value);
+      const grand=toNumber(window.__originalGrandTotal);
+      const due=Math.max(0,grand-paid);
+      document.getElementById('dueRow').style.display='table-row';
+      document.getElementById('dueCell').textContent=formatNumber(due);
+      document.getElementById('paidInput').value=formatNumber(paid);
+      const btn=document.getElementById('payBtn');
+      btn.disabled=true; btn.textContent='Paid';
+
+      var billId = sessionStorage.getItem('currentBillId');
+      if (billId && window.SarasAPI && SarasAPI.isLoggedIn()) {
+        try {
+          await SarasAPI.patchBill(billId, paid, due);
+        } catch (e) {
+          alert(e.message || 'Could not save payment on the server.');
+        }
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', function () {
+      initProtectedDrawer();
+      renderBill();
+    });
+  </script>
+</body>
+</html>
+
+

@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Saras Calculator App</title>
+    <link rel="stylesheet" href="css/app.css">
+    <style>
+        .container { padding: 10px; max-width: 600px; margin: auto; }
+        .card { background: rgba(255, 255, 255, 0.1); border-radius: 10px; padding: 10px; margin-bottom: 10px; }
+        .card h3 { font-size: 1rem; margin-bottom: 5px; }
+        .item { display: flex; align-items: center; justify-content: space-between; margin: 5px 0; gap: 10px; }
+        .item img { width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0; }
+        .item span { margin-left: 8px; flex: 1; }
+        .item input { width: 60px; padding: 8px; text-align: center; border-radius: 5px; border: none; font-size: 1rem; }
+        .item input:focus { outline: 2px solid #6200ea; }
+        .toggle-section { display: flex; justify-content: space-between; align-items: center; margin: 10px 0; font-weight: bold; font-size: 1rem; }
+        .generate-btn { width: 100%; background: #6200ea; color: white; border: none; padding: 15px; font-size: 1.1rem; border-radius: 10px; cursor: pointer; margin-top: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.3); transition: background 0.3s ease, transform 0.2s ease; }
+        .generate-btn:hover { background: #4b00c7; transform: scale(1.02); }
+        @media (max-width: 480px) {
+            .item input { width: 45px; font-size: 0.9rem; }
+            .card h3, .toggle-section span { font-size: 0.9rem; }
+        }
+    </style>
+</head>
+<body>
+    <script src="js/config.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/auth-guard.js"></script>
+
+    <header class="app-header">
+        <span class="menu-btn" onclick="toggleDrawer()">☰</span>
+        <span class="app-title">Saras Calculator App</span>
+    </header>
+
+    <div class="overlay" id="overlay" onclick="closeDrawer()"></div>
+
+    <nav class="drawer" id="drawer" aria-label="Menu">
+        <p class="drawer-title">Menu</p>
+        <ul class="drawer-list">
+            <li><a href="index.html"><span class="drawer-icon">🏠</span><span>Home</span></a></li>
+            <li><a href="history.html"><span class="drawer-icon">⏳</span><span>History</span></a></li>
+            <li><a href="about.html"><span class="drawer-icon">ℹ</span><span>About</span></a></li>
+            <li><a href="#" id="navLogout"><span class="drawer-icon">🚪</span><span id="navLogoutLabel">Log out</span></a></li>
+        </ul>
+    </nav>
+
+    <div class="container">
+        <div class="card">
+            <h3>Select Milk Rate</h3>
+            <label><input type="radio" name="rate" value="0.67" checked> .67</label>
+            <label><input type="radio" name="rate" value="0.75"> .75</label>
+        </div>
+
+        <div class="card">
+            <h3>Select Milk Format</h3>
+			<label><input type="radio" name="format" value="pouch" checked > Pouch</label>
+            <label><input type="radio" name="format" value="liter"> Liter</label>
+        </div>
+
+        <div id="items">
+            <div class="item"><img src="Tond.png"><span>Tond Milk</span> <input type="number" data-product="Tond" placeholder="0" value="0" min="0"></div>
+            <div class="item"><img src="Gold.png"><span>Gold Milk</span> <input type="number" data-product="Gold" placeholder="0" value="0" min="0"></div>
+            <div class="item"><img src="chach.png"><span>Chach</span> <input type="number" data-product="Chach" placeholder="0" value="0" min="0"></div>
+			<div class="item"><img src="batcha.png"><span>Batcha Milk</span> <input type="number" data-product="Batcha" placeholder="0" value="0" min="0"></div>
+			<div class="item"><img src="dhai 10 rupees.png"><span>Dhai 10 ₹</span> <input type="number" data-product="Dhai10" placeholder="0" value="0" min="0"></div>
+			<div class="item"><img src="Dhai_10_rupees_Dabba.png"><span>Dhai 10 ₹ Dabba </span> <input type="number" data-product="Dhai10Dabba" placeholder="0" value="0" min="0"></div>
+			<div class="item"><img src="dhai 16 rupees.png"><span>Dhai 16 ₹</span> <input type="number" data-product="Dhai16" placeholder="0" value="0" min="0"></div>
+			<div class="item"><img src="Dhai_20_rupees.png"><span>Dhai 20 ₹</span> <input type="number" data-product="Dhai20Dabba" placeholder="0" value="0" min="0"></div>
+			<div class="item"><img src="Bread.png"><span>Bread</span> <input type="number" data-product="Bread" placeholder="0" value="0" min="0"></div>
+			<div class="item"><img src="Toast.png"> <span>Toast 35 ₹</span> <input type="number" data-product="Toast" placeholder="0" value="0" min="0"></div>
+			<div class="item"><img src="massala_chach.png"><span>Massala Chach</span> <input type="number" data-product="MassalaChach" placeholder="0" value="0" min="0"></div>
+			<div class="item"><img src="Kanha.png"> <span>Toast 10 ₹</span> <input type="number" data-product="Toast10" placeholder="0" value="0" min="0"></div>
+			<div class="item"><img src="Namkeen.png"><span>Namkeen</span> <input type="number" data-product="Namkeen" placeholder="0" value="0" min="0"></div>
+            
+            <div class="item"><img src="money.png"><span>Old Dues</span> <input type="number" data-product="OldDues" placeholder="0" value="0" min="0"></div>
+        </div>
+
+        <div class="toggle-section">
+            <span>Additional Items</span>
+            <input type="checkbox" id="toggleItems" onchange="toggleExtraItems()">
+        </div>
+
+        <div id="extraItems" style="display:none;">
+            <div class="item"><img src="dhai 30 rupees.png"> <span>Dhai 32 ₹</span> <input type="number" data-product="Dhai30" placeholder="0" value="0" min="0"></div>
+            <div class="item"><img src="Paneer.png"> <span>Paneer 77 ₹</span> <input type="number" data-product="Paneer77" placeholder="0" value="0" min="0"></div>
+			<div class="item"><img src="Bread30.png"> <span>Bread 25 ₹</span> <input type="number" data-product="Bread25" placeholder="0" value="0" min="0"></div>
+            <div class="item"><img src="Besan.png"> <span>Basen 55 ₹</span> <input type="number" data-product="Basen" placeholder="0" value="0" min="0"></div>
+			<div class="item"><img src="lalamber.png"> <span>Amber Lal</span> <input type="number" data-product="Amberlal" placeholder="0" value="0" min="0"></div>
+			<div class="item"><img src="FourSquare.png"> <span>Four Square</span> <input type="number" data-product="FourSquare" placeholder="0" value="0" min="0"></div>
+			<div class="item"><img src="GoldMore.png"> <span>Gold More</span> <input type="number" data-product="GoldMore" placeholder="0" value="0" min="0"></div>
+            <div class="item"><img src="Dilbagh.png"> <span>Dilbagh</span> <input type="number" data-product="Dilbagh" placeholder="0" value="0" min="0"></div>
+            <div class="item"><img src="vimal.png"> <span>Vimal</span> <input type="number" data-product="Vimal" placeholder="0" value="0" min="0"></div>
+            <div class="item"><img src="amber.png"> <span>Ambar</span> <input type="number" data-product="Ambar" placeholder="0" value="0" min="0"></div>
+            <div class="item"><img src="Tansen.png"> <span>Tansen</span> <input type="number" data-product="Tansen" placeholder="0" value="0" min="0"></div>
+        </div>
+
+        <button class="generate-btn" onclick="generateBill()">Generate Bill</button>
+    </div>
+
+    <script src="js/drawer.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", initProtectedDrawer);
+
+        function toggleDrawer() {
+            const drawer = document.getElementById("drawer");
+            const overlay = document.getElementById("overlay");
+            drawer.classList.toggle("open");
+            overlay.classList.toggle("show");
+        }
+        function closeDrawer() {
+            document.getElementById("drawer").classList.remove("open");
+            document.getElementById("overlay").classList.remove("show");
+        }
+
+        function toggleExtraItems() {
+            const extra = document.getElementById("extraItems");
+            extra.style.display = (extra.style.display === "none" || extra.style.display === "") ? "block" : "none";
+        }
+
+        function setupInputBehavior() {
+            document.querySelectorAll('#items input, #extraItems input').forEach(input => {
+                input.addEventListener('focus', () => { if (input.value === "0") input.value = ""; });
+                input.addEventListener('blur', () => { if (input.value === "" || input.value === null) input.value = "0"; });
+                input.value = input.value === "" ? "0" : input.value;
+            });
+        }
+        setupInputBehavior();
+
+        /**
+         * Build line items and total, then save the bill to MongoDB via the API.
+         * You must be logged in so the bill is linked to your userId.
+         */
+        async function generateBill() {
+            const rate = parseFloat(document.querySelector('input[name="rate"]:checked').value);
+            const format = document.querySelector('input[name="format"]:checked').value;
+
+            const inputs = document.querySelectorAll('[data-product]');
+            const items = [];
+            let grandTotal = 0;
+
+            const productPrices = {
+                "MassalaChach": 6.5, "Batcha": 9, "Dhai16": 15.5, "Dhai10": 9, "Dhai10Dabba": 9.5,
+                "Dhai20Dabba": 18, "Dhai30": 31, "Bread": 12, "Paneer77": 75, "Bread25": 25, "Toast10": 9,
+                "Toast": 30, "Basen": 45, "Dilbagh": 120, "Vimal": 122, "Amberlal": 106, "FourSquare": 75,
+                "Ambar": 130, "Tansen": 212, "Namkeen": 56, "GoldMore": 125
+            };
+
+            inputs.forEach(input => {
+                const qty = parseFloat(input.value) || 0;
+                if (qty > 0) {
+                    let price = 0;
+
+                    if (["Tond", "Gold", "Chach"].includes(input.dataset.product)) {
+                        let basePrice =
+                            input.dataset.product === "Tond"
+                                ? (rate === 0.67 ? 26.67 : 26.75)
+                                : input.dataset.product === "Gold"
+                                    ? (rate === 0.67 ? 33.67 : 33.75)
+                                    : (rate === 0.67 ? 15.75 : 15.75);
+
+                        if (format === "liter") {
+                            basePrice *= 2;
+                        }
+
+                        price = qty * basePrice;
+                    }
+                    else if (input.dataset.product === "OldDues") {
+                        price = qty;
+                    }
+                    else if (productPrices[input.dataset.product]) {
+                        price = productPrices[input.dataset.product] * qty;
+                    }
+
+                    grandTotal += price;
+
+                    const imgSrc = input.closest(".item")?.querySelector("img")?.src || "";
+
+                    items.push({
+                        name: input.dataset.product,
+                        image: imgSrc,
+                        qtyDisplay: qty,
+                        price: parseFloat(price.toFixed(2))
+                    });
+                }
+            });
+
+            grandTotal = parseFloat(grandTotal.toFixed(2));
+
+            const now = new Date();
+            try {
+                const res = await SarasAPI.addBill({
+                    items: items,
+                    total: grandTotal,
+                    date: now.toISOString(),
+                    rate: rate,
+                    format: format
+                });
+                // Session-only copy for the bill preview page (not long-term storage)
+                sessionStorage.setItem("sarasBill", JSON.stringify(items));
+                if (res.bill && res.bill._id) {
+                    sessionStorage.setItem("currentBillId", res.bill._id);
+                }
+                sessionStorage.setItem("billViewDate", now.toLocaleDateString());
+                sessionStorage.setItem("billViewTime", now.toLocaleTimeString());
+                window.location.href = "bill.html";
+            } catch (err) {
+                alert(err.message || "Could not save the bill. Please try again.");
+            }
+        }
+</script>
+
+</body>
+</html>
