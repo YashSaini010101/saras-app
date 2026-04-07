@@ -129,9 +129,7 @@ window.__API_BASE__ = "https://saras-backend-fyof.onrender.com";
         password: password,
       }),
     });
-    var data = await handleResponse(res);
-    setSession(data);
-    return data;
+    return handleResponse(res);
   }
 
   /** Request a 6-digit OTP by email (response never contains the OTP). */
@@ -163,6 +161,33 @@ window.__API_BASE__ = "https://saras-backend-fyof.onrender.com";
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ username: username, password: password }),
+    });
+    var data = await handleResponse(res);
+    setSession(data);
+    return data;
+  }
+
+  async function postGoogleLogin(credential) {
+    var res = await fetch(API_BASE + "/auth/google", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ credential: credential }),
+    });
+    var data = await handleResponse(res);
+    setSession(data);
+    return data;
+  }
+
+  async function getGoogleConfig() {
+    var res = await fetch(API_BASE + "/auth/google/config");
+    return handleResponse(res);
+  }
+
+  async function postVerifySignup(username, otp) {
+    var res = await fetch(API_BASE + "/verify-signup", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username: username, otp: otp }),
     });
     var data = await handleResponse(res);
     setSession(data);
@@ -216,6 +241,9 @@ window.__API_BASE__ = "https://saras-backend-fyof.onrender.com";
     postForgotPassword: postForgotPassword,
     postResetPassword: postResetPassword,
     postLogin: postLogin,
+    postGoogleLogin: postGoogleLogin,
+    getGoogleConfig: getGoogleConfig,
+    postVerifySignup: postVerifySignup,
     addBill: addBill,
     getBills: getBills,
     patchBill: patchBill,

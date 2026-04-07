@@ -83,4 +83,49 @@ async function sendPasswordResetOtp(toEmail, otp) {
   );
 }
 
-module.exports = { getTransporter, sendPasswordResetOtp, normalizeAuth };
+async function sendSignupVerificationOtp(toEmail, otp) {
+  const transporter = getTransporter();
+  if (!transporter) {
+    throw new Error("Email is not configured on the server (EMAIL_USER / EMAIL_PASS).");
+  }
+
+  const { user: fromAddr } = normalizeAuth();
+  const subject = "Verify your Saras Calculator account";
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body style="font-family: Arial, sans-serif; background: #f4f4f4; padding: 24px;">
+  <div style="max-width: 480px; margin: 0 auto; background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+    <h1 style="color: #6200ea; font-size: 20px; margin: 0 0 16px;">Verify your email</h1>
+    <p style="color: #333; line-height: 1.5;">Use this one-time code to finish creating your account. It expires in <strong>10 minutes</strong>.</p>
+    <div style="text-align: center; margin: 28px 0;">
+      <span style="display: inline-block; font-size: 32px; letter-spacing: 8px; font-weight: bold; color: #6200ea; background: #ede7f6; padding: 16px 24px; border-radius: 8px;">${otp}</span>
+    </div>
+    <p style="color: #666; font-size: 14px;">If you did not try to sign up, you can ignore this email.</p>
+  </div>
+</body>
+</html>`;
+
+  const info = await transporter.sendMail({
+    from: `"Saras Calculator" <${fromAddr}>`,
+    to: toEmail,
+    subject,
+    html,
+    text: `Your Saras Calculator verification code is: ${otp}. It expires in 10 minutes.`,
+  });
+
+  console.log(
+    "[mail] Signup verification message sent. messageId=%s to=%s",
+    info.messageId,
+    toEmail
+  );
+}
+
+module.exports = {
+  getTransporter,
+  sendPasswordResetOtp,
+  sendSignupVerificationOtp,
+  normalizeAuth,
+};

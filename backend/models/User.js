@@ -25,9 +25,19 @@ const userSchema = new mongoose.Schema(
     },
     password: {
       type: String,
-      required: [true, "Password is required"],
       minlength: [6, "Password must be at least 6 characters"],
     },
+    googleId: {
+      type: String,
+      sparse: true,
+      unique: true,
+    },
+    isEmailVerified: {
+      type: Boolean,
+      default: false,
+    },
+    emailVerificationOTP: { type: String, default: undefined },
+    emailVerificationExpiry: { type: Date, default: undefined },
     resetOTP: { type: String, default: undefined },
     otpExpiry: { type: Date, default: undefined },
   },

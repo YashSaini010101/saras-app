@@ -27,6 +27,11 @@
         <button type="submit" class="btn">Log in</button>
       </form>
 
+      <div class="auth-divider" aria-hidden="true">or</div>
+      <div id="googleLogin" class="google-login">
+        <div id="googleLoginNote" class="google-login-note"></div>
+      </div>
+
       <div id="msg" class="msg" role="status"></div>
 
       <div class="auth-links">
@@ -40,26 +45,81 @@
   <script src="js/config.js"></script>
   <script src="js/api.js"></script>
   <script src="js/auth-public.js"></script>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script>
+    function setMessage(type, text) {
+      var msg = document.getElementById("msg");
+      msg.textContent = text || "";
+      msg.className = "msg" + (type ? " " + type : "");
+    }
+
+    async function initGoogleLogin() {
+      var target = document.getElementById("googleLogin");
+      var note = document.getElementById("googleLoginNote");
+      var clientId = window.__GOOGLE_CLIENT_ID__;
+
+      if (!clientId) {
+        try {
+          var config = await SarasAPI.getGoogleConfig();
+          clientId = config && config.clientId ? config.clientId : "";
+        } catch (err) {
+          clientId = "";
+        }
+      }
+
+      if (!clientId) {
+        note.textContent = "Google login is not configured yet. Add GOOGLE_CLIENT_ID in backend/.env and restart the server.";
+        return;
+      }
+
+      if (!window.google || !google.accounts || !google.accounts.id) {
+        window.setTimeout(initGoogleLogin, 250);
+        return;
+      }
+
+      note.textContent = "";
+
+      google.accounts.id.initialize({
+        client_id: clientId,
+        callback: async function (response) {
+          setMessage("", "");
+          try {
+            await SarasAPI.postGoogleLogin(response.credential);
+            setMessage("ok", "Google login successful! Redirecting...");
+            window.location.href = "index.html";
+          } catch (err) {
+            setMessage("error", err.message || "Google login failed.");
+          }
+        }
+      });
+
+      google.accounts.id.renderButton(target, {
+        theme: "outline",
+        size: "large",
+        type: "standard",
+        shape: "pill",
+        text: "signin_with",
+        width: target.offsetWidth || 320
+      });
+    }
+
     document.getElementById("loginForm").addEventListener("submit", async function (e) {
       e.preventDefault();
-      var msg = document.getElementById("msg");
-      msg.textContent = "";
-      msg.className = "msg";
+      setMessage("", "");
 
       var username = document.getElementById("username").value.trim();
       var password = document.getElementById("password").value;
 
       try {
         await SarasAPI.postLogin(username, password);
-        msg.className = "msg ok";
-        msg.textContent = "Success! Redirecting…";
+        setMessage("ok", "Success! Redirecting...");
         window.location.href = "index.html";
       } catch (err) {
-        msg.className = "msg error";
-        msg.textContent = err.message || "Login failed.";
+        setMessage("error", err.message || "Login failed.");
       }
     });
+
+    window.addEventListener("load", initGoogleLogin);
   </script>
 </body>
 </html>

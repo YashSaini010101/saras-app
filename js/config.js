@@ -4,6 +4,7 @@
  *
  * Rules:
  * - If you already set window.__API_BASE__, we leave it alone.
+ * - If you already set window.__GOOGLE_CLIENT_ID__, we leave it alone.
  * - If this page is served by Express on port 5000, API is same origin (leave unset).
  * - Otherwise on localhost / LAN, point at the machine's Express on :5000.
  */

@@ -24,11 +24,25 @@
         <label for="email">Email</label>
         <input type="email" id="email" name="email" autocomplete="email" required>
 
+        <label for="confirmEmail">Confirm email</label>
+        <input type="email" id="confirmEmail" name="confirmEmail" autocomplete="email" required>
+
         <label for="password">Password</label>
         <input type="password" id="password" name="password" autocomplete="new-password" required minlength="6">
 
         <button type="submit" class="btn">Sign up</button>
       </form>
+
+      <div id="otpPanel" class="otp-panel" hidden>
+        <label for="signupOtp">Verification code</label>
+        <input type="text" id="signupOtp" name="signupOtp" inputmode="numeric" maxlength="6" placeholder="Enter 6-digit code">
+        <button type="button" class="btn" id="verifySignupBtn">Verify email</button>
+      </div>
+
+      <div class="auth-divider" aria-hidden="true">or</div>
+      <div id="googleLogin" class="google-login">
+        <div id="googleLoginNote" class="google-login-note"></div>
+      </div>
 
       <div id="msg" class="msg" role="status"></div>
 
@@ -41,27 +55,118 @@
   <script src="js/config.js"></script>
   <script src="js/api.js"></script>
   <script src="js/auth-public.js"></script>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script>
+    function setMessage(type, text) {
+      var msg = document.getElementById("msg");
+      msg.textContent = text || "";
+      msg.className = "msg" + (type ? " " + type : "");
+    }
+
+    function isLikelyValidEmail(email) {
+      return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email);
+    }
+
+    async function initGoogleLogin() {
+      var target = document.getElementById("googleLogin");
+      var note = document.getElementById("googleLoginNote");
+      var clientId = window.__GOOGLE_CLIENT_ID__;
+
+      if (!clientId) {
+        try {
+          var config = await SarasAPI.getGoogleConfig();
+          clientId = config && config.clientId ? config.clientId : "";
+        } catch (err) {
+          clientId = "";
+        }
+      }
+
+      if (!clientId) {
+        note.textContent = "Google login is not configured yet. Add GOOGLE_CLIENT_ID in backend/.env and restart the server.";
+        return;
+      }
+
+      if (!window.google || !google.accounts || !google.accounts.id) {
+        window.setTimeout(initGoogleLogin, 250);
+        return;
+      }
+
+      note.textContent = "";
+
+      google.accounts.id.initialize({
+        client_id: clientId,
+        callback: async function (response) {
+          setMessage("", "");
+          try {
+            await SarasAPI.postGoogleLogin(response.credential);
+            setMessage("ok", "Google signup successful! Redirecting...");
+            window.location.href = "index.html";
+          } catch (err) {
+            setMessage("error", err.message || "Google login failed.");
+          }
+        }
+      });
+
+      google.accounts.id.renderButton(target, {
+        theme: "outline",
+        size: "large",
+        type: "standard",
+        shape: "pill",
+        text: "signup_with",
+        width: target.offsetWidth || 320
+      });
+    }
+
     document.getElementById("signupForm").addEventListener("submit", async function (e) {
       e.preventDefault();
-      var msg = document.getElementById("msg");
-      msg.textContent = "";
-      msg.className = "msg";
+      setMessage("", "");
 
       var username = document.getElementById("username").value.trim();
       var email = document.getElementById("email").value.trim();
+      var confirmEmail = document.getElementById("confirmEmail").value.trim();
       var password = document.getElementById("password").value;
 
+      if (!isLikelyValidEmail(email)) {
+        setMessage("error", "Please enter a valid email address.");
+        return;
+      }
+
+      if (email.toLowerCase() !== confirmEmail.toLowerCase()) {
+        setMessage("error", "Email and confirm email must match.");
+        return;
+      }
+
       try {
-        await SarasAPI.postSignup(username, email, password);
-        msg.className = "msg ok";
-        msg.textContent = "Account created! Redirecting…";
-        window.location.href = "index.html";
+        var data = await SarasAPI.postSignup(username, email, password);
+        document.getElementById("otpPanel").hidden = false;
+        document.getElementById("signupOtp").focus();
+        setMessage("ok", data.message || "We sent a verification code to your email.");
       } catch (err) {
-        msg.className = "msg error";
-        msg.textContent = err.message || "Could not sign up.";
+        setMessage("error", err.message || "Could not sign up.");
       }
     });
+
+    document.getElementById("verifySignupBtn").addEventListener("click", async function () {
+      setMessage("", "");
+
+      var username = document.getElementById("username").value.trim();
+      var otp = document.getElementById("signupOtp").value.trim();
+
+      if (!/^\d{6}$/.test(otp)) {
+        setMessage("error", "Enter the 6-digit verification code sent to your email.");
+        return;
+      }
+
+      try {
+        await SarasAPI.postVerifySignup(username, otp);
+        setMessage("ok", "Email verified! Redirecting...");
+        window.location.href = "index.html";
+      } catch (err) {
+        setMessage("error", err.message || "Verification failed.");
+      }
+    });
+
+    window.addEventListener("load", initGoogleLogin);
   </script>
 </body>
 </html>
